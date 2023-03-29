@@ -17,4 +17,4 @@ jobs:
           # Optional - x64 or x86 architecture, defaults to x64
           architecture: 'x64'
       - name: Run Test
-        run: python tests_orders.py
+        run: python test_process_orders.py
