@@ -1,4 +1,5 @@
 import json
+from io import StringIO
 from typing import List, Dict
 
 class Order:
@@ -40,19 +41,25 @@ class User:
         }
 
 def parse_line(line: str):
+    if len(line) < 95:
+        raise ValueError(f"linha inválida: {line}")
+
     user_id = int(line[:10].strip())
     name = line[10:55].strip()
-    order_id = int(line[55:65].strip())
-    product_id = int(line[65:75].strip())
-    value = float(line[75:87].strip())
+    order_id = int(line[55:65].strip() or '0')  # adiciona verificação para evitar ValueError quando o order_id está vazio
+    product_id_str = line[65:75].strip()
+    product_id = int(product_id_str) if product_id_str else 0  # adiciona verificação para evitar ValueError quando o product_id está vazio
+    value_str = line[75:87].strip()
+    value = float(value_str) if value_str else 0.0  # adiciona verificação para evitar ValueError quando o value está vazio
     date = line[87:95].strip()
     formatted_date = f"{date[:4]}-{date[4:6]}-{date[6:8]}"
     return user_id, name, order_id, product_id, value, formatted_date
 
-def process_orders(input_file: str) -> List[Dict]:
+
+def process_orders(input_data: str) -> List[Dict]:
     users = {}
 
-    with open(input_file, 'r') as file:
+    with StringIO(input_data) as file:
         for line in file:
             user_id, name, order_id, product_id, value, date = parse_line(line)
 
@@ -66,6 +73,7 @@ def process_orders(input_file: str) -> List[Dict]:
 
     return [user.to_dict() for user in users.values()]
 
+
 def save_to_file(output_file: str, data: List[Dict]):
     with open(output_file, "w") as file:
         json.dump(data, file, indent=2)
@@ -74,18 +82,18 @@ def main():
     input_files = ["data_1.txt", "data_2.txt"]
 
     for i, input_file in enumerate(input_files):
+        with open(input_file, 'r') as f:
+            input_data = f.read()
+
         output_file = f"processed_orders_{i + 1}.json"
 
-        orders_data = process_orders(input_file)
+        orders_data = process_orders(input_data)
         save_to_file(output_file, orders_data)
 
         print(f"Output para o arquivo {input_file}:")
         print(json.dumps(orders_data, indent=2))
         print("\n")
 
-        # Faz o download dos arquivos JSON
-        downloaded_file = open('downloaded_files','w+')
-        json.dump(output_file, downloaded_file) 
-
 if __name__ == "__main__":
     main()
+
